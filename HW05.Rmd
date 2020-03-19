@@ -1,0 +1,17 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(readr)
+rm(list=ls())				# clearing
+c=getwd()
+data1=read_table2("d_swap.txt",skip=1)
+data2=read_table2("w_logret_3automanu.txt")
+
+
+
+```
+

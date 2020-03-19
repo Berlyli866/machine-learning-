@@ -1,0 +1,108 @@
+---
+title: "HW04"
+author: "Beili Li 903461609"
+output: pdf_document
+---
+
+```{r}
+## preparation 
+rm(list=ls())				# clearing
+
+## load data 
+c=getwd()
+dat = read.csv("Stock_FX_Bond.csv")
+stocks_ac = dat[,c(3,5,7,9,11,13,15,17)]
+n = length(stocks_ac[,1])
+stocks_returns = log(stocks_ac[-1,] / stocks_ac[-n,])
+fact = factanal(stocks_returns,factors=2,rotation="none")
+print(fact,cutoff = 0)
+
+```
+1. What are the factor loading? What are the variances of the unique risks for Ford and General Motors?
+
+Answer:
+a.the factor laoding is shown bellow (with cutoff=$0$):
+```{r}
+#factor loading 
+#a=sum(fact$loadings[,1]^2)
+B=fact$loadings[,]
+B
+
+```
+b.the unique risks for Ford is $0.423$ and for Gerneral Motors is $0.399$.
+```{r}
+# the unique risks for Ford and Gerneral Motors is 
+u=fact$unique
+u
+```
+2. Does the likelihood ratio test suggests that two factors are enough? If not, what is the number of factors that seems sufficient?
+
+Answer: 
+1)From the result we can see for 2 factors the p-value=$2.6e-112$ is very small so we reject the null hypothesis that} $H_0:K=2$ we need add more factors. 
+```{r}
+#2 factor 
+fact = factanal(stocks_returns,factors=2,rotation="none")
+print(fact,cutoff = 0)
+```
+2)For factor numbers $K=3$ the p-value =$1.06e-31$ still smaller than $0.05$ so we continue to add more factors. 
+```{r}
+#add factors to 3
+fact_3 = factanal(stocks_returns,factors=3,rotation="none")
+print(fact_3,cutoff = 0)
+```
+3)when factor $K=4$ p-value=$0.86$ so we faile to reject $H_0:K=4$,so $k=4$ we have suffcient factors.
+```{r}
+# still rejcte H0 so we add factor to 4
+fact_4 = factanal(stocks_returns,factors=4,rotation="none")
+print(fact_4,cutoff = 0)
+```
+3. Regardless of your answer to the previous question, use the two-factor model to estimate the correlation of the log returns for Ford and IBM.
+
+Answer: the correlation between Ford and IBM is $0.338$.
+```{r}
+## estimate the covariance matrix
+B = fact$loadings[,]  # B is the loading matrix
+BB = B %*% t(B) #B*B^T
+D = diag(fact$unique) #D is V (diagnoal matrix)
+Sigma_R_hat = BB + D
+Sigma_R_hat
+```
+
+4. Explain what is the “Identifiability” issue in the formulation of the factor analysis, and how to resolve it.
+In factor analysis formulation :
+$$r_t=\alpha+Bf_t+\epsilon_t$$
+
+The issue of identifiability for a factor analysis model is that
+There is not a unique solution for $B$ and $f_t$ with an infinite number of observations in $X$. This is because multiple factor and factor loading matrices can produce the same data likelihood.
+
+So once we have fixed the latent scales and their directions , the model should then be fully identified. If it is not, the model must be changed.
+
+We can force B to be orthonormalor choose an informative rotation matrix to solve unidentifiability.
+
+```{r}
+
+```
+5. Explain what is the “Varimax” criterion and what is the motivation behind it.
+
+Suppose you are getting the rotated factor structure matrix $S$,the varimax criterion is orthogonal rotation tries to maximize variance of the squared loadings in each factor in $S$.
+
+With Varimax we can highlight a small number of important variables. Factor analysis is expressed as a dense basis with many non-zero weights which makes it hard to interpret, with Varimax we can simplify the expressions of a particular sub-space in term of just a fewer imporatant items each and interpret each eassily.The Varimax can also be used to solve the identifiability issue.
+
+6. In factor analysis, to estimate the factor scores, what is the additional transformation that has been done, in order to fit the estimation into an ordinary linear regression model?
+
+The factor scores for ith factor can be estimated as bellow:
+$$r_t=\alpha+Bf_t+\epsilon_t$$
+In order to fit the LOS model we need to have constant variance, so the transformation is :$V^{-1/2}(r_t-\alpha) = V^{-1/2}(Bf_t)+V^{-1/2}\epsilon_t$ 
+where$$V^{-1/2}=\left(
+\begin{array}{cccc}
+v_1^{-1/2}  &  &  & \\ 
+& v_2^{-1/2} \\ 
+& &... &\\
+& & & v_N^{-1/2} 
+\end{array}\right) $$
+then we have :
+$V^{-1/2}\epsilon_t \sim mN(0,I_N)$.
+
+
+
+

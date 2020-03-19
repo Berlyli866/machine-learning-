@@ -1,0 +1,151 @@
+---
+title: "R Notebook"
+output:
+  html_notebook: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+  pdf_notebook: default
+---
+
+HW03 
+Name:Beili LI
+GTid:903461609
+
+1.import data set 
+```{r}
+rm(list=ls())
+#import data 
+stock_data <- read.table("~/OneDrive - Georgia Institute of Technology/2020spring/ISYE6783-financial data analysis/Homework/HW3/m_logret_10stocks.txt",header=T)
+head(round(stock_data[2:11],4))
+attach(stock_data)
+```
+```{r}
+
+sp500_blii=read.table("~/OneDrive - Georgia Institute of Technology/2020spring/ISYE6783-financial data analysis/Homework/HW3/m_sp500ret_3mtcm.txt",sep="",skip = 1,header = T)
+
+head(round(sp500_blii[2:3],4))
+attach(sp500_blii)
+```
+```{r}
+#compute for log return 
+aapl=AAPL-X3mTCM/(100*12) #monthly return for T-blii
+adbe=ADBE-X3mTCM/(100*12)
+adp= ADP-X3mTCM/(100*12)
+amd= AMD-X3mTCM/(100*12)
+dell= DELL-X3mTCM/(100*12)
+gtw= GTW-X3mTCM/(100*12)
+hp= HP-X3mTCM/(100*12)
+ibm= IBM-X3mTCM/(100*12)
+msft= MSFT-X3mTCM/(100*12)
+orcl= ORCL-X3mTCM/(100*12)
+log_sp=sp500-X3mTCM/(100*12)
+
+```
+2.fit linear model for 10 stocks and calculate the 0.95 CI fo intercept and slope
+```{r}
+#fit linear regression model for 10 stocks
+#1----------------------------------------------
+#fit linear regression model for stock AAPL
+lm.aapl=lm(aapl~log_sp)
+summary(lm.aapl)
+
+#calclute the 95% CI for intercept and slope
+confint(lm.aapl,level = 0.95)
+```
+
+```{r}
+#2----------------------------------------------
+
+#fit linear regression model for stock ADBE
+lm.adbe=lm(adbe~log_sp)
+summary(lm.adbe)
+
+#calclute the 95% CI for intercept and slope
+confint(lm.adbe,level = 0.95)
+```
+
+```{r}
+#3----------------------------------------------
+#fit linear regression model for stock ADP
+lm.adp=lm(adp~log_sp)
+summary(lm.adp)
+
+#calclute the 95% CI for intercept and slope
+confint(lm.adp,level = 0.95)
+```
+```{r}
+#4----------------------------------------------
+#fit linear regression model for stock AMD
+lm.amd=lm(amd~log_sp)
+summary(lm.amd)  
+  
+#calclute the 95% CI for intercept and slope
+confint(lm.amd,level = 0.95)
+```
+```{r}
+#5----------------------------------------------
+#fit linear regression model for stock DELL
+lm.dell=lm(dell~log_sp)
+summary(lm.dell) 
+
+#calclute the 95% CI for intercept and slope
+confint(lm.dell,level = 0.95)
+```
+```{r}
+#6----------------------------------------------
+  
+#fit linear regression model for stock GTW
+lm.gtw=lm(gtw~log_sp)
+summary(lm.gtw) 
+
+#calclute the 95% CI for intercept and slope
+confint(lm.gtw,level = 0.95)
+```
+```{r}
+#7----------------------------------------------
+  
+#fit linear regression model for stock HP
+lm.hp=lm(hp~log_sp)
+summary(lm.hp) 
+
+#calclute the 95% CI for intercept and slope
+confint(lm.hp,level = 0.95)
+```
+```{r}
+#8----------------------------------------------
+  
+#fit linear regression model for stock IBM
+lm.ibm=lm(ibm~log_sp)
+summary(lm.ibm) 
+
+#calclute the 95% CI for intercept and slope
+confint(lm.ibm,level = 0.95)
+```
+```{r}
+#9----------------------------------------------
+  
+#fit linear regression model for stock MSFT
+lm.msft=lm(msft~log_sp)
+summary(lm.msft) 
+
+#calclute the 95% CI for intercept and slope
+confint(lm.msft,level = 0.95)
+```
+```{r}
+#10----------------------------------------------
+  
+#fit linear regression model for stock ORCL
+lm.orcl=lm(orcl~log_sp)
+summary(lm.orcl) 
+
+#calclute the 95% CI for intercept and slope
+confint(lm.orcl,level = 0.95)
+
+
+```
+(3)From the above result we can see that other p-values, except DELL, for intercept term in 10 regression models are biger than 0.05 so we accept the H0:aj=0. There is no intercept term for 9 models and no significant evidence against CAPM here. 
+
+For Dell the p-value is 0.032 so we reject the H0,  aj is not equal to 0. 
+
+

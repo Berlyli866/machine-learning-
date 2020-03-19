@@ -1,0 +1,153 @@
+---
+title: "HWO7"
+author: "Beili Li"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+\subsection{Problem1}
+\subsubsection{1. data cleaning}
+In this part we check the missing value and enumerate the missing value and convert some categorical variables as factor.  
+- From the result, besides variables that are already change to factor we still need to set Survived,Pclass as factor.  
+```{r}
+
+#loading the data 
+rm(list=ls())
+c=getwd()
+data=read.csv("train.csv",header = T,na.strings=c(""))
+
+#check the data sturcture 
+library(knitr) 
+str(data)
+
+
+```
+```{r}
+#data cleaning
+#check missing value 
+colSums(is.na(data))
+```
+```{r}
+#check empty value 
+colSums(data=='')
+#check number of unique data and determine which variables are factors 
+sapply(data, function(x) length(unique(x)))
+#check the missing value portion 
+library(Amelia)
+missmap(data, main = "Missing values vs observed")
+```
+
+```{R}
+#change num vairable to factor
+for (i in c("Survived","Pclass")){data[,i]=as.factor(data[,i])}
+# we enumerate missing number value with mean and factor value with value has biggest frequency 
+data$Age[is.na(data$Age)]=mean(data$Age,na.rm = T)
+data$Embarked[data$Embarked==""]='S'
+data$Embarked[is.na(data$Embarked)]='S'
+missmap(data, main = "Missing Values vs. Observed after solving missing value")
+```
+\subsubsection{2. model fitting}
+We choose variables \textbf{Plcass,Sex,Age,Sibso,Parch,Fare,Embarked} in our model.  
+1).From results we can see class2 ,class3 and sex-male,Age,Sibsp are significant in our model.  
+For class rank, the higher the rank the bugger of survival probability.  
+For sex, female are more likely to survive.  
+For Age ,younger people are more likly to survive.  
+And peopel with less numbers of siblings and spouse are more likely to survive.  
+Overall,on the Titanic it was better to be female, better to be a child, and better to be of higher economic status.  
+
+```{r}
+# we choose variables that can fit in logistic modles 
+#the selected variables are Plcass,Sex,Age,Sibso,Parch,Fare,Embarked
+data2=subset(data,select=c(2,3,5,6,7,8,10,12))
+# fitting logistic model 
+## split the data into tranining and testing data with 80% ,20% 
+dim(data2)
+train <- data2[1:712,]
+test <- data2[713:891,]
+model <- glm(Survived ~.,family=binomial(link='logit'),data=train)
+summary(model)
+```
+2).The ANOVA table shows that adding Pcalss, Sex, age and Sibsp has significantly reduce the residuals deviances while the other terms aren’t anymore at alpha = 0.05 level.  
+```{r}
+# Interpreting the results of our logistic regression model
+anova(model, test="Chisq")
+```
+
+\subsubsection{3. check model performance}
+Using McFadden R-square index we can see that the logsitic regresion model has well explained 32.3% of variation in the survival prediction.    
+From the model confusion matrix we can see our logistic model has 83.2% predition accuracy for test set.    
+From AUC plot we can see that the rate of successful classification is 88.23%. Overall the model has a good prediction performance.    
+```{R}
+# R^2 of GLM 
+library(pscl)
+pR2(model)
+# predict and check accuracy metrics with the test set 
+result=predict(model,newdata=subset(test,type='response'))
+#set 0.5 as threshold
+result=ifelse(result > 0.5,1,0)
+library(caret)
+confusionMatrix(data=as.factor(result), reference=test$Survived)
+```
+```{r}
+# ROR curve and calculating the area under the curve
+library(ROCR)
+predictions=predict(model,newdata = test,type = 'response')
+ROCRpred <- prediction(predictions, test$Survived)
+ROCRperf <- performance(ROCRpred, measure = "tpr", x.measure = "fpr")
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7), print.cutoffs.at = seq(0,1,0.1))
+
+
+#AUC
+auc <- performance(ROCRpred, measure = "auc")
+auc=auc@y.values[[1]]
+auc
+```
+\subsection{Problem2}
+Now we consider model with interactions.  
+Here we want to check interactions with $Sex*Parch*Age$ and $Sex:Pclass$.  
+\subsubsection{modle fitting results}
+
+2).From the model summary results we found that at the same sex, male with children and parents are much more likely to survive than these who not, we conclude that the association between **Sex** and the probability that survival = 1 depends on the values of **Parch**. Also interaction of **Sex,Pclass** are significant, female in calss2 are less likely to survive than male in class1 which means effect of sex on survivial is moderated by calss rank. But under higher class(class>2) female has much more chance to survive than female in lower class(class3).  
+
+1).The ANOVA table shows that adding interaction of **Pcalss:Sex,Age:Sex,Age:Parch** has significantly reduce the residuals deviances at alpha = 0.05 level.  
+
+```{R}
+model1 <- glm(formula =Survived~SibSp+Fare+Embarked+Age*Parch*Sex+Sex:Pclass ,family=binomial(link='logit'),data=train)
+summary(model1)
+anova(model1,test="Chisq")
+
+```
+\subsubsection{modle performanc}
+1).From the McFadden R-square index we can see that the logsitic regresion model has well explained 38.44% of variation in the survival prediction.  
+The prediction accuracy for test set is 85.47%.  
+2).From AUC plot we can see that the rate of successful classification is 91.32%. Overall the model with interaction terms can improve our prediction accuracy.  
+
+```{R}
+#check the model performance 
+pR2(model1)
+# predict and check accuracy metrics with the test set 
+result1=predict(model1,newdata=subset(test,type='response'))
+#set 0.5 as threshold
+result=ifelse(result1 > 0.5,1,0)
+misClasificError <- mean(result != test$Survived)
+print(paste('Accuracy',1-misClasificError))
+```
+```{R}
+# ROR curve and calculating the area under the curve
+library(ROCR)
+predictions=predict(model1,newdata = test,type = 'response')
+ROCRpred <- prediction(predictions, test$Survived)
+ROCRperf <- performance(ROCRpred, measure = "tpr", x.measure = "fpr")
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7), print.cutoffs.at = seq(0,1,0.1))
+
+
+#AUC
+auc <- performance(ROCRpred, measure = "auc")
+auc=auc@y.values[[1]]
+auc
+
+```
+
+
+
+
